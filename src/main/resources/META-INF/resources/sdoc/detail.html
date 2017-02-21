@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+
+<body>
+<div class="sdoc-wrap">
+<div class="container">
+      <div class="content">
+        <h4 style="padding-top:0">URL</h4><div class="markdown strong"><span id="dispMethod"></span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="dispPath"></span></div>
+        <h4>Notes</h4><div class="markdown"><p id="description"></p></div>
+        <p><span class="model-signature">
+        <div class="signature-container">
+          <div class="snippet">
+            <h4>Response</h4>
+            <pre><code id="responseValue"></code></pre>
+            <small class="notice"></small>
+          </div>
+        </div>
+        </span></p>
+          <div style="margin:0;padding:0;display:inline"></div>
+          <h4 >Parameters</h4>
+          <table class="fullwidth">
+          <thead>
+            <tr>
+            <th style="width: 100px;">Parameter</th>
+            <th>Value</th>
+            <th style="width: 200px;">Description</th>
+            <th style="width: 100px;">Parameter Type</th>
+            <th style="width: 100px;">Annotation Type</th>
+            </tr>
+          </thead>
+          <tbody id="params" class="operation-params" > </tbody></table>
+          <div class="sandbox_header">
+            <input id="btnTestApi" class="layui-btn" type="button" value="测试接口" onclick="doTest()">
+            <input id="btnCleanResult" class="layui-btn layui-btn-danger" type="button" value="清空结果" onclick="doClean()">
+          </div>
+          
+          <div id="testResult"></div>
+          
+      </div>
+</div>
+</div>
+    <script type="text/javascript">
+    $(function() {
+        var groupIndex = $("#groupIndex").val();
+        var beanName = $("#beanName").val();
+        var apiIndex = $("#apiIndex").val();
+        var method = $("#method").val();
+        var path = $("#path").val();
+        $("#dispMethod").html(method);
+        $("#dispPath").html(path);
+        var sdocClass="sdoc-wrap-"+method;
+        $(".sdoc-wrap").addClass(sdocClass);
+
+        if(beanName==''||apiIndex==''){
+            $(".sdoc-wrap").hide();
+            //btnTestApi.disabled="true";
+            //$("#btnTestApi").addClass("layui-btn-disabled");
+            return;
+        }
+        $(".sdoc-wrap").show();
+        A.ajax_get("api/detail/"+groupIndex+"/"+beanName+"/"+apiIndex,documentsCallback);
+        function documentsCallback(data){
+           //console.log(data);
+           $("#responseValue").html(do_js_beautify(data.response.value));
+           $("#description").html(data.description);
+           var parameters = data.parameters;
+           $.each(data.parameters,function(idx,item){
+               var name = item.name;
+               var type =item.type;
+               var annotationType =item.annotationType;
+               if(annotationType==null){annotationType="";}
+               var value='';
+               if(type=='body'){
+                   if(item.value != null){
+                       value='<textarea class="body-textarea pValue">';
+                       value+= do_js_beautify(item.value);
+                       value+='</textarea>';
+                   }
+               }else{
+                   value='<input class="pValue" type="text" />';
+               }
+               var description =item.description;
+               var show ='<tr>';
+               show+='<td class="markdown pName">'+name+'</td>';
+               show+='<td>'+value+'</td>';
+               show+='<td class="markdown">'+description+'</td>';
+               show+='<td class="markdown pType">'+type+'</td>';
+               show+='<td class="markdown pAnnotationType">'+annotationType+'</td>';
+               show+='</tr>';
+               $("#params").append(show);
+           });
+        }
+    });
+    
+    function do_js_beautify(content) {
+        js_source = content.replace(/^\s+/, '');
+        tab_size = 4;
+        tabchar = ' ';
+        content = js_beautify(js_source, tab_size, tabchar);
+        return content;
+    }
+    function doTest(){
+        var method = $("#method").val();
+        var url = getRootPath()+$("#path").val();
+        if(method=="GET"){
+            var pValueInputs = $("#params").find(".pValue");
+            var pNameLabels = $("#params").find(".pName");
+            var pTypeLabels = $("#params").find(".pType");
+            var pAnnotationTypeLabels = $("#params").find(".pAnnotationType");
+            var pIndex=0;
+            var paramStr='';
+            $.each(pValueInputs,function(idx,item){
+                if($(item).val()!=''){
+                    //var pValue=$(pTypeLabels[idx]).html();
+                    var pType=$(pTypeLabels[idx]).html();
+                    var pAnnotationType=$(pAnnotationTypeLabels[idx]).html();
+                    if(pAnnotationType=='RequestParam'){
+                        if(pIndex==0){
+                            paramStr+="?";
+                        }else{
+                            paramStr+="&amp;";
+                        }
+                        if(pType=='body'){
+                            var obj = JSON.parse($(item).val());
+                            $.each(Object.keys(obj),function(idx2,item2){
+                                if(idx2!=0){
+                                    paramStr+="&amp;";
+                                }
+                                paramStr+=item2+"="+obj[item2];
+                                pIndex++;
+                            });
+                        }else{
+                            paramStr+=$(pNameLabels[idx]).html()+"="+$(item).val();
+                            pIndex++;
+                        }
+                    }else if(pAnnotationType=='PathVariable'){
+                        var s1 = "{"+$(pNameLabels[idx]).html()+"}";
+                        var s2 = $(item).val();
+                        url = url.replace(s1,s2);
+                    }
+                }
+            });
+            doGet(url+paramStr);
+        }else {
+            var pValueInputs = $("#params").find(".pValue");
+            var pNameLabels = $("#params").find(".pName");
+            var pTypeLabels = $("#params").find(".pType");
+            var pAnnotationTypeLabels = $("#params").find(".pAnnotationType");
+            var pIndex=0;
+            var paramStr='';
+            var paramObj;
+            $.each(pValueInputs,function(idx,item){
+                if($(item).val()!=''){
+                    //var pValue=$(pTypeLabels[idx]).html();
+                    var pType=$(pTypeLabels[idx]).html();
+                    var pAnnotationType=$(pAnnotationTypeLabels[idx]).html();
+                    if(pAnnotationType=='RequestParam'){
+                        if(pIndex==0){
+                            paramStr+="?";
+                        }else{
+                            paramStr+="&amp;";
+                        }
+                        if(pType=='body'){
+                            var obj = JSON.parse($(item).val());
+                            $.each(Object.keys(obj),function(idx2,item2){
+                                if(idx2!=0){
+                                    paramStr+="&amp;";
+                                }
+                                paramStr+=item2+"="+obj[item2];
+                                pIndex++;
+                            });
+                        }else{
+                            paramStr+=$(pNameLabels[idx]).html()+"="+$(item).val();
+                            pIndex++;
+                        }
+                    }else if(pAnnotationType=='PathVariable'){
+                        var s1 = "{"+$(pNameLabels[idx]).html()+"}";
+                        var s2 = $(item).val();
+                        url = url.replace(s1,s2);
+                    } else if(pAnnotationType=='RequestBody'){
+                    	paramObj = JSON.parse($(item).val());
+                    }
+                }
+            });
+            doOthers(method,url+paramStr,paramObj);
+        }
+    }
+
+    function doGet(url){
+        $.ajax({
+            type: "GET",
+            async:true,
+            cache:false,
+            url: url,
+            success:function(result, textStatus, xhr){
+                A.loading.cancel();
+                var body = do_js_beautify(JSON.stringify(result));
+                showResponse(url,xhr.status,body,xhr.getAllResponseHeaders());
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                A.loading.cancel();
+                var body = do_js_beautify(xhr.responseText);
+                showResponse(url,xhr.status,body,xhr.getAllResponseHeaders());
+            }
+        });
+    }
+
+    function doOthers(type,url,data){
+        $.ajax({
+            type: type,
+            async:true,
+            cache:false,
+            url: url,
+            contentType: "application/json;charset=utf-8",
+            dataType: "JSON",
+            data: JSON.stringify(data),
+            timeout: this.ajax_timeout,
+            success: function(result, textStatus, xhr) {
+                A.loading.cancel();
+                var body = do_js_beautify(JSON.stringify(result));
+                showResponse(url,xhr.status,body,xhr.getAllResponseHeaders());
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                A.loading.cancel();
+                var body = do_js_beautify(xhr.responseText);
+                showResponse(url,xhr.status,body,xhr.getAllResponseHeaders());
+            }
+        });
+    }
+
+    function showResponse(url,status,body,header){
+        var show ='<h4>Request URL</h4><div class="markdown"><pre>'+url+'</pre></div>';
+        show+='<h4>Response Code</h4><div class="markdown"><pre>'+status+'</pre></div>';
+        show+='<h4>Response Body</h4><div class="markdown"><pre>'+body+'</pre></div>';
+        show+='<h4>Response Header</h4><div class="markdown"><pre>'+header+'</pre></div>';
+        $("#testResult").html(show);
+    }
+    function doClean(){
+        $("#testResult").html('');
+    }
+    </script>
+    </body>
+</html>
