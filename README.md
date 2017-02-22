@@ -11,7 +11,7 @@
 
 
 ## 快速上手
-目前第一版只支持spring boot的项目，项目引用的话也很简单，在pom.xml中加入Swagger2的依赖
+目前第一版只支持spring boot的项目，项目引用的话也很简单，在pom.xml中加入SDoc的依赖
 
 ```xml
 <dependency>
