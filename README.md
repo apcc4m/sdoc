@@ -11,9 +11,17 @@
 
 
 ## 快速上手
+目前第一版只支持spring boot的项目，项目引用的话也很简单，在pom.xml中加入Swagger2的依赖
 
-目前第一版只支持spring boot的项目，项目引用的话也很简单，创建SDoc配置类SdocConfig.
+```xml
+<dependency>
+    <groupId>com.apcc4m</groupId>
+    <artifactId>sdoc</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
 
+创建SDoc配置类SdocConfig.
 ```java
 @Configuration
 @EnableSdoc
@@ -41,14 +49,14 @@ public class SdocConfig {
 
 如同swagger，如果需要对接口进行说明，则需要在接口方法上方加入注解
 
-```java
-    @Sdoc(value = "获取用户列表", notes = "后台通过分页参数获取指定页码的用户数据")
-    @RequestMapping(value = "/list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public PageList<UserInfo> list(HttpServletRequest req, PageBean pageBean) throws Exception {
-        PageList<UserInfo> result = userManageService.findUserList(pageBean);
-        return result;
-    }
+```
+@Sdoc(value = "获取用户列表", notes = "后台通过分页参数获取指定页码的用户数据")
+@RequestMapping(value = "/list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+@ResponseBody
+public PageList<UserInfo> list(HttpServletRequest req, PageBean pageBean) throws Exception {
+    PageList<UserInfo> result = userManageService.findUserList(pageBean);
+    return result;
+}
 ```
 如果没加说明，则默认是方法名，目前第一版暂不支持对参数的说明，以后的版本会加上，有些人会认为这会侵入原来的代码，不是很喜欢，但这种程度的侵入就当是给方法加注释了，本身SDoc又比较小，对你整体项目部署也不会有太大影响
 
@@ -66,7 +74,7 @@ public class SdocConfig {
 
 路径的配置。
 
-```java
+```
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
         super.addResourceHandlers(registry);
