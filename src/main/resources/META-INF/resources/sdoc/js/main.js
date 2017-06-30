@@ -1,8 +1,25 @@
 /**
  * 加载页面
  */
-function locationUrl(url){
-    location.href="index.html#?act="+url;
+function locationUrl(url) {
+    if (url == "#") {
+        return;
+    }
+    if (isIE()) {
+        load(url);
+        location.href = "index#?act=" + url;
+    } else {
+        location.href = "index#?act=" + url;
+    }
+
+}
+
+function isIE() {
+    if (!!window.ActiveXObject || "ActiveXObject" in window) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /**

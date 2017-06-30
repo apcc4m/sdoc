@@ -61,7 +61,6 @@
     $(function() {
     A.ajax_get("api/documents",documentsCallback);
          function documentsCallback(data){
-            console.log(data);
             documents = data;
             var selDocHtml = '';
             $.each(data,function(idx,item){
