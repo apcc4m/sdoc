@@ -2,16 +2,30 @@
 .logo {
     position: absolute;
     left: 0;
-    top: 18px;
+    top: 8px;
     color: #fff;
     font-weight: bold;
     font-size: 1.85em;
+    margin-left: 20px;
 }
 
-.layui-header {
-    position: relative;
-    z-index: 1000;
-    height: 55px;
+.sel-doc {
+    float: right;
+    width: 180px;
+    margin-right: 20px;
+    margin-top: 6px;
+}
+
+.sel-doc .layui-input, .layui-select {
+    height: 28px;
+    line-height: 28px;
+    border: 1px solid #e6e6e6;
+    background-color: #fff;
+    border-radius: 2px;
+}
+
+.sel-doc .layui-form-select dl dd, .layui-form-select dl dt {
+    line-height: 28px;
 }
 
 .layui-side-bg {
@@ -32,9 +46,14 @@
     background: transparent;
 }
 
-.layui-header {
-    background: #1AA094;
+.sdoc-wrap .layui-header {
+    background: #3c3c3c;
+    border-bottom: 2px solid #3c3c3c;
+    position: relative;
+    z-index: 1000;
+    height: 40px;
 }
+
 .layui-nav-tree .layui-nav-item a:hover {
     background-color: #f2f2f2;
     color: #717171;
@@ -46,25 +65,25 @@
 /*     border-left: 5px solid #009E94; */
 }
 
-.layui-layout-admin .layui-side {
-    top: 60px;
-    width: 620px;
+.sdoc-wrap .layui-side {
+    top: 45px;
+    width: 520px;
     overflow-y:auto;
 }
-.layui-layout-admin .layui-body {
-    top: 60px;
+.sdoc-wrap .layui-body {
+    top: 45px;
     padding:10px;
 }
 
 .layui-side-scroll {
-    width: 620px !important;
+    width: 520px !important;
 }
 
 .layui-nav-tree {
-    width: 600px !important;
+    width: 500px !important;
 }
 .layui-body {
-    left: 620px;
+    left: 520px;
 }
 
 .layui-nav-tree .layui-nav-child a {
@@ -82,7 +101,6 @@
     background-color: transparent;
     color: #000000;
 }
-
 
 .http-item{
     height:30px;
@@ -123,11 +141,6 @@
 
 .http-summary{float:right;margin-right:4px;font-size:12px;text-align:center;color:#717171 !important;}
 
-.sdoc-wrap{
-    padding:20px;
-    min-height:100%;
-}
-
 .sdoc-wrap-GET{background-color: #e7f0f7;border: 1px solid #c3d9ec;}
 .sdoc-wrap-POST{background-color: #e7f6ec;border: 1px solid #c3e8d1;}
 .sdoc-wrap-ALL{background-color: #e7f0f7; border: 1px solid #c3d9ec;}
@@ -139,8 +152,10 @@
 
 
 .sdoc-wrap .content{
-
+    padding:20px;
+    min-height:100%;
 }
+
 .sdoc-wrap .content h4{
     color: #0f6ab4;
     padding:20px 0 4px 0;
@@ -192,13 +207,11 @@
 }
 .sdoc-wrap .markdown {
 	margin-top:4px;
-/*     font-weight: bold; */
     color: #000;
     font-size: .9em;
 }
 
 .sdoc-wrap .strong {
-/* 	margin-top:20px; */
     font-weight: bold;
     color: #000;
     font-size: .9em;

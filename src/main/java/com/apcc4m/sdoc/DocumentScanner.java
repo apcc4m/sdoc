@@ -1,19 +1,10 @@
 package com.apcc4m.sdoc;
 
-import static com.google.common.collect.FluentIterable.from;
-import static com.google.common.collect.Lists.newArrayList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,8 +37,6 @@ import com.apcc4m.sdoc.bean.Parameter;
 import com.apcc4m.sdoc.bean.RequestHandler;
 import com.apcc4m.sdoc.bean.Response;
 import com.apcc4m.sdoc.bean.Tag;
-import com.google.common.base.Function;
-import com.google.common.collect.Ordering;
 
 @Component
 public class DocumentScanner implements ApplicationListener<ContextRefreshedEvent> {
@@ -67,8 +56,8 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        requestHandlers = requestHandlers();
-        documentations = new ArrayList<Documentation>();
+        requestHandlers = requestHandlers(handlerMappings);
+        documentations = new ArrayList<>();
         for (SdocInfo sdocInfo : sdocInfoList) {
             Documentation documentation = new Documentation();
             Map<String, List<Options>> optionsMap = new HashMap<String, List<Options>>();
@@ -85,10 +74,9 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
                 MethodParameter[] methodParameters = item.getHandlerMethod().getMethodParameters();
                 List<Options> optionsList = optionsMap.get(beanName);
                 Options lastOptions = optionsList.get(optionsList.size() - 1);
-                List<Parameter> parameters = new ArrayList<Parameter>();
-                for (int i = 0; i < methodParameters.length; i++) {
-                    Class<?> pclass = methodParameters[i].getParameterType();
-                    Parameter p = createRarameter(methodParameters[i], pclass);
+                List<Parameter> parameters = new ArrayList<>();
+                for (MethodParameter parameter : methodParameters) {
+                    Parameter p = createParameter(parameter, parameter.getParameterType());
                     if (p != null) {
                         parameters.add(p);
                     }
@@ -106,66 +94,40 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
             documentation.setGroupName(sdocInfo.getGroupName());
             documentations.add(documentation);
         }
-
-    }
-
-    public List<RequestHandler> getRequestHandlers() {
-        return requestHandlers;
     }
 
     public List<Documentation> getDocumentations() {
         return documentations;
     }
 
-    public List<RequestHandler> requestHandlers() {
-        return byPatternsCondition().sortedCopy(from(nullToEmptyList(handlerMappings))
-                .transformAndConcat(toMappingEntries()).transform(toRequestHandler()));
-    }
 
-    public static Ordering<RequestHandler> byPatternsCondition() {
-        return Ordering.from(new Comparator<RequestHandler>() {
-            @Override
-            public int compare(RequestHandler first, RequestHandler second) {
-                return first.getRequestMapping().getPatternsCondition().toString()
-                        .compareTo(second.getRequestMapping().getPatternsCondition().toString());
+    public List<RequestHandler> requestHandlers(List<RequestMappingInfoHandlerMapping> handlerMappings) {
+        handlerMappings = nullToEmptyList(handlerMappings);
+        List<RequestHandler> requestHandlerList = new ArrayList<>();
+        for (RequestMappingInfoHandlerMapping item : handlerMappings) {
+            Set<Map.Entry<RequestMappingInfo, HandlerMethod>> entrySet = item.getHandlerMethods().entrySet();
+            for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : entrySet) {
+                requestHandlerList.add(new RequestHandler(entry.getKey(), entry.getValue()));
             }
-        });
+        }
+        return requestHandlerList;
     }
 
     public static <T> List<T> nullToEmptyList(Collection<T> newValue) {
         if (newValue == null) {
-            return newArrayList();
+            return new ArrayList();
         }
-        return newArrayList(newValue);
-    }
-
-    private Function<? super RequestMappingInfoHandlerMapping, Iterable<Map.Entry<RequestMappingInfo, HandlerMethod>>> toMappingEntries() {
-        return new Function<RequestMappingInfoHandlerMapping, Iterable<Map.Entry<RequestMappingInfo, HandlerMethod>>>() {
-            @Override
-            public Iterable<Map.Entry<RequestMappingInfo, HandlerMethod>> apply(
-                    RequestMappingInfoHandlerMapping input) {
-                return input.getHandlerMethods().entrySet();
-            }
-        };
-    }
-
-    private Function<Map.Entry<RequestMappingInfo, HandlerMethod>, RequestHandler> toRequestHandler() {
-        return new Function<Map.Entry<RequestMappingInfo, HandlerMethod>, RequestHandler>() {
-            @Override
-            public RequestHandler apply(Map.Entry<RequestMappingInfo, HandlerMethod> input) {
-                return new RequestHandler(input.getKey(), input.getValue());
-            }
-        };
+        return new ArrayList(newValue);
     }
 
     public List<Tag> createTags(Map<String, List<Options>> apiMap) {
-        List<Tag> tags = new ArrayList<Tag>();
+        List<Tag> tags = new ArrayList<>();
         for (String key : apiMap.keySet()) {
             Tag tag = new Tag();
             tag.setTagId(key);
             tag.setTagName(key);
             List<Options> list = apiMap.get(key);
-            List<Tag> children = new ArrayList<Tag>();
+            List<Tag> children = new ArrayList<>();
             Integer apiIndex = 0;
             for (Options api : list) {
                 Tag child = new Tag();
@@ -185,7 +147,7 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
     public void createOptionsMap(RequestHandler item, String beanName, Map<String, List<Options>> optionsMap) {
         List<Options> optionsList = optionsMap.get(beanName);
         if (optionsList == null) {
-            optionsList = new ArrayList<Options>();
+            optionsList = new ArrayList<>();
         }
         Options apiListing = new Options();
         Set<String> parrerns = item.getRequestMapping().getPatternsCondition().getPatterns();
@@ -194,6 +156,7 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
         Set<MediaType> produces = item.getRequestMapping().getProducesCondition().getProducibleMediaTypes();
         Sdoc sdoc = item.getHandlerMethod().getMethodAnnotation(Sdoc.class);
         if (sdoc != null) {
+            // @Sdoc(value = "获取用户列表", notes = "后台通过分页参数获取指定页码的用户数据")
             apiListing.setSummary(sdoc.value());
             apiListing.setDescription(sdoc.notes());
         } else {
@@ -270,40 +233,7 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
         return response;
     }
 
-    public boolean isBaseClass(Class<?> clazz) {
-        if (clazz == int.class || clazz == Integer.class || clazz == long.class || clazz == Long.class
-                || clazz == double.class || clazz == Double.class || clazz == float.class || clazz == Float.class) {
-            return true;
-        } else if (clazz == String.class) {
-            return true;
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            return true;
-        } else if (clazz == java.util.Date.class || clazz == java.sql.Date.class) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isIgnoreRequestClass(Class<?> clazz) {
-        if (clazz == HttpServletRequest.class || clazz == HttpSession.class || clazz == RedirectAttributes.class
-                || clazz == MultipartHttpServletRequest.class || clazz == HttpServletResponse.class
-                || clazz == Map.class || clazz == List.class) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isIgnoreResponseClass(Class<?> clazz) {
-        if (clazz == ModelAndView.class || clazz == Map.class || clazz == Object.class) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public Parameter createRarameter(MethodParameter methodParameter, Class<?> clazz) {
+    public Parameter createParameter(MethodParameter methodParameter, Class<?> clazz) {
         // 判断是否是需要忽略的参数
         if (isIgnoreRequestClass(clazz)) {
             return null;
@@ -360,14 +290,20 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
 
     public String formatClass(Class<?> clazz0, List<Class<?>> parents) {
         StringBuilder result = new StringBuilder();
+        List<Field> fieldList = new ArrayList<>();
         result.append("{");
-        Field[] fields = clazz0.getDeclaredFields();
+        // getDeclaredFields获取所有字段,public和protected和private,但是不包括父类字段,需要遍历至顶层
+        Class tempClass = clazz0;
+        //当父类为null的时候说明到达了最上层的父类(Object类).
+        while (tempClass != null && !tempClass.getName().toLowerCase().equals("java.lang.object")) {
+            fieldList.addAll(Arrays.asList(tempClass.getDeclaredFields()));
+            tempClass = tempClass.getSuperclass(); //得到父类,然后赋给自己
+        }
         int index = 0;
-        for (Field field : fields) {
+        for (Field field : fieldList) {
             index++;
             Class<?> clazz = field.getType();
-            if (clazz == int.class || clazz == Integer.class || clazz == long.class || clazz == Long.class
-                    || clazz == double.class || clazz == Double.class || clazz == float.class || clazz == Float.class) {
+            if (isNumberClass(clazz)) {
                 result.append("\"").append(field.getName()).append("\"").append(":").append(0);
             } else if (clazz == String.class) {
                 result.append("\"").append(field.getName()).append("\"").append(":").append("\"string\"");
@@ -388,8 +324,7 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
                         result.append("[");
                         if (actualTypes[0] instanceof Class) {
                             Class<?> clz = (Class<?>) actualTypes[0];
-                            String s = formatClass1(clz, parents);
-                            result.append(s).append("]");
+                            result.append(formatClass1(clz, parents)).append("]");
                         } else {
                             result.append("]");
                         }
@@ -405,7 +340,7 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
                             .append(formatClass(clazz, parents));
                 }
             }
-            if (fields.length != index) {
+            if (fieldList.size() != index) {
                 result.append(",");
             }
         }
@@ -415,8 +350,7 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
 
     public String formatClass1(Class<?> clazz, List<Class<?>> parents) {
         StringBuilder result = new StringBuilder();
-        if (clazz == int.class || clazz == Integer.class || clazz == long.class || clazz == Long.class
-                || clazz == double.class || clazz == Double.class || clazz == float.class || clazz == Float.class) {
+        if (isNumberClass(clazz)) {
             result.append(0);
         } else if (clazz == String.class) {
             result.append("\"string\"");
@@ -434,6 +368,46 @@ public class DocumentScanner implements ApplicationListener<ContextRefreshedEven
             }
         }
         return result.toString();
+    }
+
+    public boolean isBaseClass(Class<?> clazz) {
+        if (isNumberClass(clazz)) {
+            return true;
+        } else if (clazz == String.class) {
+            return true;
+        } else if (clazz == boolean.class || clazz == Boolean.class) {
+            return true;
+        } else if (clazz == java.util.Date.class || clazz == java.sql.Date.class) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public boolean isNumberClass(Class<?> clazz) {
+        if (clazz == int.class || clazz == Integer.class || clazz == long.class || clazz == Long.class
+                || clazz == double.class || clazz == Double.class || clazz == float.class || clazz == Float.class) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isIgnoreRequestClass(Class<?> clazz) {
+        if (clazz == HttpServletRequest.class || clazz == HttpSession.class || clazz == RedirectAttributes.class
+                || clazz == MultipartHttpServletRequest.class || clazz == HttpServletResponse.class
+                || clazz == Map.class || clazz == List.class) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isIgnoreResponseClass(Class<?> clazz) {
+        if (clazz == ModelAndView.class || clazz == Map.class || clazz == Object.class) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

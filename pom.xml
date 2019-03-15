@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.apcc4m</groupId>
     <artifactId>sdoc</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <description>sdoc是一个用于生成、描述、调用和可视化RESTful风格的框架，目标是让代码和接口文档同步更新。</description>
     <organization>
@@ -34,7 +34,7 @@
         <connection>scm:git:https://github.com/apcc4m/sdoc.git</connection>
         <developerConnection>scm:git:https://github.com/apcc4m/sdoc.git</developerConnection>
         <url>https://github.com/apcc4m/sdoc</url>
-        <tag>v1.0.0</tag>
+        <tag>v1.0.1</tag>
     </scm>
 
     <dependencies>
@@ -49,12 +49,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>${spring.version}</version>
-        </dependency>
-        <!-- google Guava依赖 -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
         </dependency>
     </dependencies>
 

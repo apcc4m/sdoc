@@ -1,62 +1,3 @@
-/**
- * 加载页面
- */
-function locationUrl(url) {
-    if (url == "#") {
-        return;
-    }
-    if (isIE()) {
-        load(url);
-        location.href = "index#?act=" + url;
-    } else {
-        location.href = "index#?act=" + url;
-    }
-
-}
-
-function isIE() {
-    if (!!window.ActiveXObject || "ActiveXObject" in window) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/**
- * 浏览器前进后退时触发事件
- */
- window.onpopstate=function(){
-     var act = getQueryString("act");
-     if(act!=null){
-         load(act);
-     }
-}
-/**
- * 浏览器重新加载时触发事件
- */
-window.onload=function(){
-     var act = getQueryString("act");
-     if(act!=null){
-         load(act);
-     }
-}
-
-/**
- * 获取url参数,如果没有传则获取当前url路径
- * @param name
- * @param href
- * @returns
- */
-function getQueryString(name,href) {
-    if (typeof(href) == "undefined") {
-         var href = window.location.href;
-    }
-    if(href.indexOf("?")==-1){return null;}
-    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
-    var r = href.split("?")[1].match(reg);
-    if (r != null) return unescape(r[2]);
-    return null;
-}
 
 /**
  * 加载右部内容
@@ -65,99 +6,9 @@ function getQueryString(name,href) {
  */
 function load(uri) {
     A.loading.start();
-    if(uri == "#"){return;}
     $('#content-main').empty().load(uri, function(response, status, xhr) {
-         _handlerResponse(response);
+        A.loading.cancel();
      });
-}
-
-function _handlerResponse(response) {
-    A.loading.cancel();
-}
-
-function openDialog(id) {
-    $(id).modal({backdrop: 'static', keyboard: false});
-    $("body").css('padding-right','0px');
-}
-
-function closeDialog (id) {
-    $(id).modal('hide');
-}
-
-$(document).ready(function () {
-
-    // 当屏幕尺寸小于768px时调整布局
-    setBodySmall();
-
-    // 点击顶部可隐藏左侧菜单
-    $('.hide-menu').on('click', function(event){
-        event.preventDefault();
-        if ($(window).width() < 769) {
-            $("body").toggleClass("show-sidebar");
-        } else {
-            $("body").toggleClass("hide-sidebar");
-        }
-    });
-
-    // 二级菜单点击添加active样式
-    $('#side-menu .nav-second-level li').on('click', function(event){
-    	$(this).parent().find("li").removeClass("active");
-        $(this).toggleClass("active");
-    });
-    
-   setTimeout(function () {
-        fixWrapperHeight();
-    });
-
-});
-
-/*$(window).bind("load", function () {
-    // Remove splash screen after load
-    //$('.splash').css('display', 'none')
-});*/
-
-$(window).bind("resize click", function () {
-
-    // Add special class to minimalize page elements when screen is less than 768px
-    setBodySmall();
-
-    // Waint until metsiMenu, collapse and other effect finish and set wrapper height
-    setTimeout(function () {
-        fixWrapperHeight();
-    }, 300);
-});
-
-function fixWrapperHeight() {
-
-    // Get and set current height
-    var headerH = 62;
-    var navigationH = $("#navigation").height();
-    var contentH = $(".content").height();
-
-    // Set new height when contnet height is less then navigation
-    if (contentH < navigationH) {
-        $("#wrapper").css("min-height", navigationH + 'px');
-    }
-
-    // Set new height when contnet height is less then navigation and navigation is less then window
-    if (contentH < navigationH && navigationH < $(window).height()) {
-        $("#wrapper").css("min-height", $(window).height() - headerH  + 'px');
-    }
-
-    // Set new height when contnet is higher then navigation but less then window
-    if (contentH > navigationH && contentH < $(window).height()) {
-        $("#wrapper").css("min-height", $(window).height() - headerH + 'px');
-    }
-}
-
-
-function setBodySmall() {
-    if ($(this).width() < 769) {
-        $('body').addClass('page-small');
-    } else {
-        $('body').removeClass('page-small');
-        $('body').removeClass('show-sidebar');
-    }
 }
 
 function getRootPath() {
@@ -165,9 +16,9 @@ function getRootPath() {
     var pathName = window.document.location.pathname;            // 获取主机地址之后的目录，如： /ems/Pages/Basic/Person.jsp
     var pos = curWwwPath.indexOf(pathName);
     var localhostPath = curWwwPath.substring(0, pos);            // 获取主机地址，如： http://localhost:8080
-    return localhostPath;
-    //var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);        // 获取带"/"的项目名，如：/ems
-    //return (localhostPath + projectName);
+    // return localhostPath;
+    var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);        // 获取带"/"的项目名，如：/ems
+    return (localhostPath + projectName);
 }
 
 function js_beautify(js_source_text, indent_size, indent_character, indent_level)
@@ -189,7 +40,7 @@ function js_beautify(js_source_text, indent_size, indent_character, indent_level
     function print_newline(ignore_repeated)
     {
         ignore_repeated = typeof ignore_repeated === 'undefined' ? true: ignore_repeated;
-        
+
         trim_output();
 
         if (!output.length) {
@@ -320,7 +171,7 @@ function js_beautify(js_source_text, indent_size, indent_character, indent_level
             }
             return [c, 'TK_WORD'];
         }
-        
+
         if (c === '(' || c === '[') {
             return [c, 'TK_START_EXPR'];
         }
@@ -378,9 +229,9 @@ function js_beautify(js_source_text, indent_size, indent_character, indent_level
         }
 
         if (c === "'" || // string
-        c === '"' || // string
-        (c === '/' &&
-        ((last_type === 'TK_WORD' && last_text === 'return') || (last_type === 'TK_START_EXPR' || last_type === 'TK_END_BLOCK' || last_type === 'TK_OPERATOR' || last_type === 'TK_EOF' || last_type === 'TK_END_COMMAND')))) { // regexp
+            c === '"' || // string
+            (c === '/' &&
+                ((last_type === 'TK_WORD' && last_text === 'return') || (last_type === 'TK_START_EXPR' || last_type === 'TK_END_BLOCK' || last_type === 'TK_OPERATOR' || last_type === 'TK_EOF' || last_type === 'TK_END_COMMAND')))) { // regexp
             var sep = c;
             var esc = false;
             c = '';
@@ -470,263 +321,263 @@ function js_beautify(js_source_text, indent_size, indent_character, indent_level
 
         switch (token_type) {
 
-        case 'TK_START_EXPR':
-            var_line = false;
-            set_mode('EXPRESSION');
-            if (last_type === 'TK_END_EXPR' || last_type === 'TK_START_EXPR') {
-                // do nothing on (( and )( and ][ and ]( ..
-            } else if (last_type !== 'TK_WORD' && last_type !== 'TK_OPERATOR') {
-                print_space();
-            } else if (in_array(last_word, line_starters) && last_word !== 'function') {
-                print_space();
-            }
-            print_token();
-            break;
-
-        case 'TK_END_EXPR':
-            print_token();
-            restore_mode();
-            break;
-
-        case 'TK_START_BLOCK':
-            
-            if (last_word === 'do') {
-                set_mode('DO_BLOCK');
-            } else {
-                set_mode('BLOCK');
-            }
-            if (last_type !== 'TK_OPERATOR' && last_type !== 'TK_START_EXPR') {
-                if (last_type === 'TK_START_BLOCK') {
-                    print_newline();
-                } else {
+            case 'TK_START_EXPR':
+                var_line = false;
+                set_mode('EXPRESSION');
+                if (last_type === 'TK_END_EXPR' || last_type === 'TK_START_EXPR') {
+                    // do nothing on (( and )( and ][ and ]( ..
+                } else if (last_type !== 'TK_WORD' && last_type !== 'TK_OPERATOR') {
+                    print_space();
+                } else if (in_array(last_word, line_starters) && last_word !== 'function') {
                     print_space();
                 }
-            }
-            print_token();
-            indent();
-            break;
-
-        case 'TK_END_BLOCK':
-            if (last_type === 'TK_START_BLOCK') {
-                // nothing
-                trim_output();
-                unindent();
-            } else {
-                unindent();
-                print_newline();
-            }
-            print_token();
-            restore_mode();
-            break;
-
-        case 'TK_WORD':
-
-            if (do_block_just_closed) {
-                print_space();
                 print_token();
-                print_space();
                 break;
-            }
 
-            if (token_text === 'case' || token_text === 'default') {
-                if (last_text === ':') {
-                    // switch cases following one another
-                    remove_indent();
+            case 'TK_END_EXPR':
+                print_token();
+                restore_mode();
+                break;
+
+            case 'TK_START_BLOCK':
+
+                if (last_word === 'do') {
+                    set_mode('DO_BLOCK');
                 } else {
-                    // case statement starts in the same line where switch
+                    set_mode('BLOCK');
+                }
+                if (last_type !== 'TK_OPERATOR' && last_type !== 'TK_START_EXPR') {
+                    if (last_type === 'TK_START_BLOCK') {
+                        print_newline();
+                    } else {
+                        print_space();
+                    }
+                }
+                print_token();
+                indent();
+                break;
+
+            case 'TK_END_BLOCK':
+                if (last_type === 'TK_START_BLOCK') {
+                    // nothing
+                    trim_output();
+                    unindent();
+                } else {
                     unindent();
                     print_newline();
-                    indent();
                 }
                 print_token();
-                in_case = true;
+                restore_mode();
                 break;
-            }
 
+            case 'TK_WORD':
 
-            prefix = 'NONE';
-            if (last_type === 'TK_END_BLOCK') {
-                if (!in_array(token_text.toLowerCase(), ['else', 'catch', 'finally'])) {
-                    prefix = 'NEWLINE';
-                } else {
-                    prefix = 'SPACE';
+                if (do_block_just_closed) {
                     print_space();
+                    print_token();
+                    print_space();
+                    break;
                 }
-            } else if (last_type === 'TK_END_COMMAND' && (current_mode === 'BLOCK' || current_mode === 'DO_BLOCK')) {
-                prefix = 'NEWLINE';
-            } else if (last_type === 'TK_END_COMMAND' && current_mode === 'EXPRESSION') {
-                prefix = 'SPACE';
-            } else if (last_type === 'TK_WORD') {
-                prefix = 'SPACE';
-            } else if (last_type === 'TK_START_BLOCK') {
-                prefix = 'NEWLINE';
-            } else if (last_type === 'TK_END_EXPR') {
-                print_space();
-                prefix = 'NEWLINE';
-            }
 
-            if (last_type !== 'TK_END_BLOCK' && in_array(token_text.toLowerCase(), ['else', 'catch', 'finally'])) {
-                print_newline();
-            } else if (in_array(token_text, line_starters) || prefix === 'NEWLINE') {
-                if (last_text === 'else') {
-                    // no need to force newline on else break
+                if (token_text === 'case' || token_text === 'default') {
+                    if (last_text === ':') {
+                        // switch cases following one another
+                        remove_indent();
+                    } else {
+                        // case statement starts in the same line where switch
+                        unindent();
+                        print_newline();
+                        indent();
+                    }
+                    print_token();
+                    in_case = true;
+                    break;
+                }
+
+
+                prefix = 'NONE';
+                if (last_type === 'TK_END_BLOCK') {
+                    if (!in_array(token_text.toLowerCase(), ['else', 'catch', 'finally'])) {
+                        prefix = 'NEWLINE';
+                    } else {
+                        prefix = 'SPACE';
+                        print_space();
+                    }
+                } else if (last_type === 'TK_END_COMMAND' && (current_mode === 'BLOCK' || current_mode === 'DO_BLOCK')) {
+                    prefix = 'NEWLINE';
+                } else if (last_type === 'TK_END_COMMAND' && current_mode === 'EXPRESSION') {
+                    prefix = 'SPACE';
+                } else if (last_type === 'TK_WORD') {
+                    prefix = 'SPACE';
+                } else if (last_type === 'TK_START_BLOCK') {
+                    prefix = 'NEWLINE';
+                } else if (last_type === 'TK_END_EXPR') {
                     print_space();
-                } else if ((last_type === 'TK_START_EXPR' || last_text === '=') && token_text === 'function') {
-                    // no need to force newline on 'function': (function
-                    // DONOTHING
-                } else if (last_type === 'TK_WORD' && (last_text === 'return' || last_text === 'throw')) {
-                    // no newline between 'return nnn'
-                    print_space();
-                } else if (last_type !== 'TK_END_EXPR') {
-                    if ((last_type !== 'TK_START_EXPR' || token_text !== 'var') && last_text !== ':') {
-                        // no need to force newline on 'var': for (var x = 0...)
-                        if (token_text === 'if' && last_type === 'TK_WORD' && last_word === 'else') {
-                            // no newline for } else if {
-                            print_space();
-                        } else {
+                    prefix = 'NEWLINE';
+                }
+
+                if (last_type !== 'TK_END_BLOCK' && in_array(token_text.toLowerCase(), ['else', 'catch', 'finally'])) {
+                    print_newline();
+                } else if (in_array(token_text, line_starters) || prefix === 'NEWLINE') {
+                    if (last_text === 'else') {
+                        // no need to force newline on else break
+                        print_space();
+                    } else if ((last_type === 'TK_START_EXPR' || last_text === '=') && token_text === 'function') {
+                        // no need to force newline on 'function': (function
+                        // DONOTHING
+                    } else if (last_type === 'TK_WORD' && (last_text === 'return' || last_text === 'throw')) {
+                        // no newline between 'return nnn'
+                        print_space();
+                    } else if (last_type !== 'TK_END_EXPR') {
+                        if ((last_type !== 'TK_START_EXPR' || token_text !== 'var') && last_text !== ':') {
+                            // no need to force newline on 'var': for (var x = 0...)
+                            if (token_text === 'if' && last_type === 'TK_WORD' && last_word === 'else') {
+                                // no newline for } else if {
+                                print_space();
+                            } else {
+                                print_newline();
+                            }
+                        }
+                    } else {
+                        if (in_array(token_text, line_starters) && last_text !== ')') {
                             print_newline();
                         }
                     }
-                } else {
-                    if (in_array(token_text, line_starters) && last_text !== ')') {
-                        print_newline();
-                    }
+                } else if (prefix === 'SPACE') {
+                    print_space();
                 }
-            } else if (prefix === 'SPACE') {
-                print_space();
-            }
-            print_token();
-            last_word = token_text;
+                print_token();
+                last_word = token_text;
 
-            if (token_text === 'var') {
-                var_line = true;
-                var_line_tainted = false;
-            }
-
-            break;
-
-        case 'TK_END_COMMAND':
-
-            print_token();
-            var_line = false;
-            break;
-
-        case 'TK_STRING':
-
-            if (last_type === 'TK_START_BLOCK' || last_type === 'TK_END_BLOCK') {
-                print_newline();
-            } else if (last_type === 'TK_WORD') {
-                print_space();
-            }
-            print_token();
-            break;
-
-        case 'TK_OPERATOR':
-
-            var start_delim = true;
-            var end_delim = true;
-            if (var_line && token_text !== ',') {
-                var_line_tainted = true;
-                if (token_text === ':') {
-                    var_line = false;
+                if (token_text === 'var') {
+                    var_line = true;
+                    var_line_tainted = false;
                 }
-            }
 
-            if (token_text === ':' && in_case) {
-                print_token(); // colon really asks for separate treatment
-                print_newline();
                 break;
-            }
 
-            in_case = false;
+            case 'TK_END_COMMAND':
 
-            if (token_text === ',') {
-                if (var_line) {
-                    if (var_line_tainted) {
-                        print_token();
-                        print_newline();
-                        var_line_tainted = false;
-                    } else {
-                        print_token();
-                        print_space();
-                    }
-                } else if (last_type === 'TK_END_BLOCK') {
-                    print_token();
+                print_token();
+                var_line = false;
+                break;
+
+            case 'TK_STRING':
+
+                if (last_type === 'TK_START_BLOCK' || last_type === 'TK_END_BLOCK') {
                     print_newline();
-                } else {
-                    if (current_mode === 'BLOCK') {
+                } else if (last_type === 'TK_WORD') {
+                    print_space();
+                }
+                print_token();
+                break;
+
+            case 'TK_OPERATOR':
+
+                var start_delim = true;
+                var end_delim = true;
+                if (var_line && token_text !== ',') {
+                    var_line_tainted = true;
+                    if (token_text === ':') {
+                        var_line = false;
+                    }
+                }
+
+                if (token_text === ':' && in_case) {
+                    print_token(); // colon really asks for separate treatment
+                    print_newline();
+                    break;
+                }
+
+                in_case = false;
+
+                if (token_text === ',') {
+                    if (var_line) {
+                        if (var_line_tainted) {
+                            print_token();
+                            print_newline();
+                            var_line_tainted = false;
+                        } else {
+                            print_token();
+                            print_space();
+                        }
+                    } else if (last_type === 'TK_END_BLOCK') {
                         print_token();
                         print_newline();
                     } else {
-                        // EXPR od DO_BLOCK
-                        print_token();
-                        print_space();
+                        if (current_mode === 'BLOCK') {
+                            print_token();
+                            print_newline();
+                        } else {
+                            // EXPR od DO_BLOCK
+                            print_token();
+                            print_space();
+                        }
+                    }
+                    break;
+                } else if (token_text === '--' || token_text === '++') { // unary operators special case
+                    if (last_text === ';') {
+                        // space for (;; ++i)
+                        start_delim = true;
+                        end_delim = false;
+                    } else {
+                        start_delim = false;
+                        end_delim = false;
+                    }
+                } else if (token_text === '!' && last_type === 'TK_START_EXPR') {
+                    // special case handling: if (!a)
+                    start_delim = false;
+                    end_delim = false;
+                } else if (last_type === 'TK_OPERATOR') {
+                    start_delim = false;
+                    end_delim = false;
+                } else if (last_type === 'TK_END_EXPR') {
+                    start_delim = true;
+                    end_delim = true;
+                } else if (token_text === '.') {
+                    // decimal digits or object.property
+                    start_delim = false;
+                    end_delim = false;
+
+                } else if (token_text === ':') {
+                    // zz: xx
+                    // can't differentiate ternary op, so for now it's a ? b: c; without space before colon
+                    if (last_text.match(/^\d+$/)) {
+                        // a little help for ternary a ? 1 : 0;
+                        start_delim = true;
+                    } else {
+                        start_delim = false;
                     }
                 }
+                if (start_delim) {
+                    print_space();
+                }
+
+                print_token();
+
+                if (end_delim) {
+                    print_space();
+                }
                 break;
-            } else if (token_text === '--' || token_text === '++') { // unary operators special case
-                if (last_text === ';') {
-                    // space for (;; ++i)
-                    start_delim = true;
-                    end_delim = false;
-                } else {
-                    start_delim = false;
-                    end_delim = false;
-                }
-            } else if (token_text === '!' && last_type === 'TK_START_EXPR') {
-                // special case handling: if (!a)
-                start_delim = false;
-                end_delim = false;
-            } else if (last_type === 'TK_OPERATOR') {
-                start_delim = false;
-                end_delim = false;
-            } else if (last_type === 'TK_END_EXPR') {
-                start_delim = true;
-                end_delim = true;
-            } else if (token_text === '.') {
-                // decimal digits or object.property
-                start_delim = false;
-                end_delim = false;
 
-            } else if (token_text === ':') {
-                // zz: xx
-                // can't differentiate ternary op, so for now it's a ? b: c; without space before colon
-                if (last_text.match(/^\d+$/)) {
-                    // a little help for ternary a ? 1 : 0;
-                    start_delim = true;
-                } else {
-                    start_delim = false;
-                }
-            }
-            if (start_delim) {
+            case 'TK_BLOCK_COMMENT':
+
+                print_newline();
+                print_token();
+                print_newline();
+                break;
+
+            case 'TK_COMMENT':
+
+                // print_newline();
                 print_space();
-            }
+                print_token();
+                print_newline();
+                break;
 
-            print_token();
-
-            if (end_delim) {
-                print_space();
-            }
-            break;
-
-        case 'TK_BLOCK_COMMENT':
-
-            print_newline();
-            print_token();
-            print_newline();
-            break;
-
-        case 'TK_COMMENT':
-
-            // print_newline();
-            print_space();
-            print_token();
-            print_newline();
-            break;
-
-        case 'TK_UNKNOWN':
-            print_token();
-            break;
+            case 'TK_UNKNOWN':
+                print_token();
+                break;
         }
 
         last_type = token_type;
