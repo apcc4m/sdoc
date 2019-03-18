@@ -18,6 +18,9 @@ function getRootPath() {
     var localhostPath = curWwwPath.substring(0, pos);            // 获取主机地址，如： http://localhost:8080
     // return localhostPath;
     var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);        // 获取带"/"的项目名，如：/ems
+    if (projectName === '/sdoc') {
+        return localhostPath;
+    }
     return (localhostPath + projectName);
 }
 
